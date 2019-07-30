@@ -1,0 +1,285 @@
+buildCmd: mvn -e -X -Dlicense.skip=true -Dmaven.enforcer.skip=true  -Denforcer.skip=true -Dair.check.skip-all=true -Dmaven.test.skip=true compile
+testCmd: true
+skipVerification: true
+# Copyright 2019 Diffblue Limited. All Rights Reserved.
+cbmcArguments:
+  # Do not generate coverage comments on generated tests.
+  java-generate-no-comments: true
+  # Constrain the size of arrays created in the analyzed code.
+  java-max-vla-length: 100000
+phases:
+  -
+    # Phase 0 PRETTY, SIMPLE and SMART - pretty tests, do not test private methods directly, Smart-Harness
+    timeout: 180
+    cbmcArguments:
+      # Use simple models first containers (ArrayList, HashMap, HashSet,...) will have a maximum size of one.
+      classpath: '/tools/cbmc/models-simple-overlay.jar:/tools/cbmc/models.jar:.'
+      # Set a limit on the number of instructions that can be generated as part of a test trace.
+      depth: 1500
+      # Maximum allowed length for an array passed as test input.
+      max-nondet-array-length: 10
+      # Bound the length of input strings.
+      max-nondet-string-length: 10
+      # Add constraint that strings are printable
+      string-printable: true
+      # Make implicit runtime exceptions explicit.
+      throw-runtime-exceptions: false
+      # Set an upper bound on loop unwinding.
+      unwind: 1
+      # Do not test any methods that have the specified access level.
+      do-not-test-methods-with-access: [private]
+      # Instrument the entry point function only.
+      cover-function-only: false
+      # Instrument the file as opposed to the function only
+      cover-only: file
+      # Set string input value
+      string-input-value: ["foo", "Bar", "BAZ", "1234", "1a 2b 3c", "A1B2C3", "a,b,c", "1", "2", "3", "a/b/c", "a'b'c", ",", "/", "'"]
+      # Instantiate classes using the simplest constructor strategy
+      smart-harness: simplest-constructor-and-nondet
+  -
+    # Phase 1 PRETTY AND COMPLEX - standard models only, pretty tests, do not test private methods directly, input factory
+    timeout: 180
+    cbmcArguments:
+      # Use the standard models library
+      classpath: '/tools/cbmc/models.jar:.'
+      # Set a limit on the number of instructions that can be generated as part of a test trace.
+      depth: false
+      # never initialize reference-typed parameter to the entry point with null
+      java-assume-inputs-non-null: true
+      # Maximum allowed length for an array passed as test input.
+      max-nondet-array-length: 10
+      # Bound the length of input strings.
+      max-nondet-string-length: 10
+      # Add constraint that strings are printable
+      string-printable: true
+      # Set string input value
+      string-input-value: ["foo", "Bar", "BAZ", "1234", "1a 2b 3c", "A1B2C3", "a,b,c", "1", "2", "3", "a/b/c", "a'b'c", ",", "/", "'"]
+      # Make implicit runtime exceptions explicit.
+      throw-runtime-exceptions: false
+      # Set an upper bound on loop unwinding.
+      unwind: 2
+      # Do not test any methods that have the specified access level.
+      do-not-test-methods-with-access: [private]
+      # Instrument the entry point function only.
+      cover-function-only: false
+      # instrument the file as opposed to the function only
+      cover-only: file
+      # Limit input factory recursive depth (default 0 = no recursion allowed)
+      java-test-input-factory-bmc-recursion-limit: 4
+  -
+    # Phase 2 FIFO Strategy - pretty tests, do not test private methods directly, fifo
+    timeout: 100
+    cbmcArguments:
+      # Use the standard models library
+      classpath: '/tools/cbmc/models.jar:.'
+      # Set a limit on the number of instructions that can be generated as part of a test trace.
+      depth: false
+      # never initialize reference-typed parameter to the entry point with null
+      java-assume-inputs-non-null: true
+      # Maximum allowed length for an array passed as test input.
+      max-nondet-array-length: 30
+      # Add constraint that strings are printable
+      max-nondet-string-length: 100
+      # Explores the program tree breadth-first.
+      paths: fifo
+      # Set string input value
+      string-input-value: ["foo", "Bar", "BAZ", "1234", "1a 2b 3c", "A1B2C3", "a,b,c", "1", "2", "3", "a/b/c", "a'b'c", ",", "/", "'"]
+      # Add constraint that strings are printable
+      string-printable: true
+      # Make implicit runtime exceptions explicit.
+      throw-runtime-exceptions: false
+      # Set an upper bound on loop unwinding.
+      unwind: false
+      # Do not test any methods that have the specified access level.
+      do-not-test-methods-with-access: [private]
+      # Instrument the entry point function only.
+      cover-function-only: false
+      # instrument the file as opposed to the function only
+      cover-only: file
+  -
+    # Phase 3 Exceptions - do not test private methods directly
+    timeout: 180
+    cbmcArguments:
+      # Use simple models containers first (ArrayList, HashMap, HashSet,...) will have a maximum size of one.
+      classpath: '/tools/cbmc/models-simple-overlay.jar:/tools/cbmc/models.jar:.'
+      # Set a limit on the number of instructions that can be generated as part of a test trace.
+      depth: false
+      # Maximum allowed length for an array passed as test input.
+      max-nondet-array-length: 30
+      # Bound the length of input strings.
+      max-nondet-string-length: 30
+      # Add constraint that strings are printable
+      string-printable: false
+      # Make implicit runtime exceptions explicit.
+      throw-runtime-exceptions: true
+      # Set an upper bound on loop unwinding.
+      unwind: 3
+      # Do not test any methods that have the specified access level.
+      do-not-test-methods-with-access: [private]
+      # Instrument the entry point function only.
+      cover-function-only: false
+      # instrument the file as opposed to the function only
+      cover-only: file
+  -
+    # Phase 4 Direct testing - test private methods directly, increased reflection
+    timeout: 180
+    cbmcArguments:
+      # Use simple models containers first (ArrayList, HashMap, HashSet,...) will have a maximum size of one.
+      classpath: '/tools/cbmc/models-simple-overlay.jar:/tools/cbmc/models.jar:.'
+      # Set a limit on the number of instructions that can be generated as part of a test trace.
+      depth: 1500
+      # never initialize reference-typed parameter to the entry point with null
+      java-assume-inputs-non-null: true
+      # Maximum allowed length for an array passed as test input.
+      max-nondet-array-length: 10
+      # Bound the length of input strings.
+      max-nondet-string-length: 10
+      # Add constraint that strings are printable
+      string-printable: true
+      # Make implicit runtime exceptions explicit.
+      throw-runtime-exceptions: false
+      # Set an upper bound on loop unwinding.
+      unwind: 1
+      # Set string input value
+      string-input-value: ["foo", "Bar", "BAZ", "1234", "1a 2b 3c", "A1B2C3", "a,b,c", "1", "2", "3", "a/b/c", "a'b'c", ",", "/", "'"]
+      # If the logs contain output of the following then proceed to phase X
+    nextPhase:
+      # If the function is not analysable then do not pass onto the next phase
+      not_analyzed: null
+  -
+    # PHASE 5 Mocking - aggressive mocking, do not test private methods directly
+    timeout: 180
+    cbmcArguments:
+      # Use simple models containers first (ArrayList, HashMap, HashSet,...) will have a maximum size of one.
+      classpath: '/tools/cbmc/models-simple-overlay.jar:/tools/cbmc/models.jar:.'
+      # Set a limit on the number of instructions that can be generated as part of a test trace.
+      depth: 3000
+      # never initialize reference-typed parameter to the entry point with null
+      java-assume-inputs-non-null: true
+      # Only load the class (and related inner/outer classes) containing the method under test,
+      load-containing-class-only: true
+      # Maximum allowed length for an array passed as test input.
+      max-nondet-array-length: 30
+      # Bound the length of input strings.
+      max-nondet-string-length: 100
+      # Add constraint that strings are printable
+      string-printable: false
+      # Make implicit runtime exceptions explicit.
+      throw-runtime-exceptions: true
+      # Set an upper bound on loop unwinding.
+      unwind: 3
+      # Do not test any methods that have the specified access level.
+      do-not-test-methods-with-access: [private]
+      # Instrument the entry point function only.
+      cover-function-only: false
+      # instrument the file as opposed to the function only
+      cover-only: file
+units:
+ - target:
+   - dir: flash-core/target/classes
+     file: cn/enilu/flash/utils/MD5.class
+     sourceDir: flash-core/src/main/java
+     sourceFile: cn/enilu/flash/utils/MD5.java
+ - target:
+   - dir: flash-core/target/classes
+     file: cn/enilu/flash/utils/PageKit.class
+     sourceDir: flash-core/src/main/java
+     sourceFile: cn/enilu/flash/utils/PageKit.java
+ - target:
+   - dir: flash-core/target/classes
+     file: cn/enilu/flash/utils/CollectionKit.class
+     sourceDir: flash-core/src/main/java
+     sourceFile: cn/enilu/flash/utils/CollectionKit.java
+   - dir: flash-core/target/classes
+     file: cn/enilu/flash/utils/PageKit.class
+     sourceDir: flash-core/src/main/java
+     sourceFile: cn/enilu/flash/utils/PageKit.java
+   - dir: flash-core/target/classes
+     file: cn/enilu/flash/utils/StringUtils.class
+     sourceDir: flash-core/src/main/java
+     sourceFile: cn/enilu/flash/utils/StringUtils.java
+   - dir: flash-core/target/classes
+     file: cn/enilu/flash/utils/CollectionKit$1.class
+     sourceDir: flash-core/src/main/java
+     sourceFile: cn/enilu/flash/utils/CollectionKit.java
+   - dir: flash-core/target/classes
+     file: cn/enilu/flash/utils/cache/exception/ToolBoxException.class
+     sourceDir: flash-core/src/main/java
+     sourceFile: cn/enilu/flash/utils/cache/exception/ToolBoxException.java
+ - target:
+   - dir: flash-core/target/classes
+     file: cn/enilu/flash/utils/StringUtils.class
+     sourceDir: flash-core/src/main/java
+     sourceFile: cn/enilu/flash/utils/StringUtils.java
+   - dir: flash-core/target/classes
+     file: cn/enilu/flash/utils/MD5.class
+     sourceDir: flash-core/src/main/java
+     sourceFile: cn/enilu/flash/utils/MD5.java
+   - dir: flash-core/target/classes
+     file: cn/enilu/flash/utils/RandomUtils.class
+     sourceDir: flash-core/src/main/java
+     sourceFile: cn/enilu/flash/utils/RandomUtils.java
+   - dir: flash-core/target/classes
+     file: cn/enilu/flash/utils/CollectionKit.class
+     sourceDir: flash-core/src/main/java
+     sourceFile: cn/enilu/flash/utils/CollectionKit.java
+   - dir: flash-core/target/classes
+     file: cn/enilu/flash/utils/DateUtil.class
+     sourceDir: flash-core/src/main/java
+     sourceFile: cn/enilu/flash/utils/DateUtil.java
+ - target:
+   - dir: flash-core/target/classes
+     file: cn/enilu/flash/utils/HexKit.class
+     sourceDir: flash-core/src/main/java
+     sourceFile: cn/enilu/flash/utils/HexKit.java
+   - dir: flash-core/target/classes
+     file: cn/enilu/flash/utils/StringUtils.class
+     sourceDir: flash-core/src/main/java
+     sourceFile: cn/enilu/flash/utils/StringUtils.java
+ - target:
+   - dir: flash-generator/target/classes
+     file: cn/enilu/flash/code/StrKit.class
+     sourceDir: flash-generator/src/main/java
+     sourceFile: cn/enilu/flash/code/StrKit.java
+ - target:
+   - dir: flash-core/target/classes
+     file: cn/enilu/flash/utils/MobileUtil.class
+     sourceDir: flash-core/src/main/java
+     sourceFile: cn/enilu/flash/utils/MobileUtil.java
+   - dir: flash-core/target/classes
+     file: cn/enilu/flash/utils/MobileUtil$MobileType.class
+     sourceDir: flash-core/src/main/java
+     sourceFile: cn/enilu/flash/utils/MobileUtil.java
+ - target:
+   - dir: flash-core/target/classes
+     file: cn/enilu/flash/utils/Convert.class
+     sourceDir: flash-core/src/main/java
+     sourceFile: cn/enilu/flash/utils/Convert.java
+   - dir: flash-core/target/classes
+     file: cn/enilu/flash/utils/BasicType.class
+     sourceDir: flash-core/src/main/java
+     sourceFile: cn/enilu/flash/utils/BasicType.java
+   - dir: flash-core/target/classes
+     file: cn/enilu/flash/utils/CollectionKit.class
+     sourceDir: flash-core/src/main/java
+     sourceFile: cn/enilu/flash/utils/CollectionKit.java
+   - dir: flash-core/target/classes
+     file: cn/enilu/flash/utils/StringUtils.class
+     sourceDir: flash-core/src/main/java
+     sourceFile: cn/enilu/flash/utils/StringUtils.java
+   - dir: flash-core/target/classes
+     file: cn/enilu/flash/utils/cache/exception/ToolBoxException.class
+     sourceDir: flash-core/src/main/java
+     sourceFile: cn/enilu/flash/utils/cache/exception/ToolBoxException.java
+   - dir: flash-core/target/classes
+     file: cn/enilu/flash/utils/HexKit.class
+     sourceDir: flash-core/src/main/java
+     sourceFile: cn/enilu/flash/utils/HexKit.java
+   - dir: flash-core/target/classes
+     file: cn/enilu/flash/utils/DateTimeKit.class
+     sourceDir: flash-core/src/main/java
+     sourceFile: cn/enilu/flash/utils/DateTimeKit.java
+   - dir: flash-core/target/classes
+     file: cn/enilu/flash/utils/DateTime.class
+     sourceDir: flash-core/src/main/java
+     sourceFile: cn/enilu/flash/utils/DateTime.java
